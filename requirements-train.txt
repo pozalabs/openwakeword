@@ -23,7 +23,7 @@ deep-phonemizer==0.0.19
 # Data
 mutagen==1.47.0
 pronouncing==0.3.0
-datasets>=2.18
+datasets>=2.18,<3
 soundfile
 
 # Model conversion
