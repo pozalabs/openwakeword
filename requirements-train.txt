@@ -2,9 +2,14 @@
 # Based on the Colab notebook (automatic_model_training_simple).
 #
 # Usage:
-#   pip install torch==2.5.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cu121
 #   pip install -e .
 #   pip install -r requirements-train.txt
+
+--extra-index-url https://download.pytorch.org/whl/cu121
+
+# PyTorch (CUDA 12.1 build, compatible with CUDA 12.2+)
+torch==2.5.0
+torchaudio==2.5.0
 
 # TTS & audio
 piper-tts
