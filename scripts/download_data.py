@@ -108,11 +108,14 @@ def download_fma(output_dir: Path, n_hours: int):
         logger.info("FMA directory is not empty, skipping")
         return
 
-    logger.info(f"Downloading FMA clips ({n_hours} hours)...")
-    ds = datasets.load_dataset("rudraml/fma", name="small", split="train", streaming=True)
+    logger.info(f"Downloading FMA dataset (this downloads the full 'small' subset first)...")
+    ds = datasets.load_dataset(
+        "rudraml/fma", name="small", split="train", trust_remote_code=True,
+    )
     ds = ds.cast_column("audio", datasets.Audio(sampling_rate=16000))
 
     n_clips = n_hours * 3600 // 30
+    logger.info(f"Converting {n_clips} FMA clips ({n_hours} hours)...")
     for i, row in enumerate(tqdm(ds, total=n_clips)):
         name = Path(row["audio"]["path"]).stem + ".wav"
         audio = (row["audio"]["array"] * 32767).astype(np.int16)
