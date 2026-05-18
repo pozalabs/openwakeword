@@ -28,7 +28,8 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 AUDIOSET_REPO = "agkphysics/AudioSet"
-PIPER_REPO = "https://github.com/rhasspy/piper-sample-generator"
+PIPER_REPO = "https://github.com/dscripka/piper-sample-generator"
+PIPER_COMMIT = "213d4d5"
 PIPER_VOICE_URL = "https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt"
 FEATURES_URL = "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
 VALIDATION_URL = "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy"
@@ -52,6 +53,7 @@ def download_piper(output_dir: Path):
     else:
         logger.info("Cloning piper-sample-generator...")
         subprocess.run(["git", "clone", PIPER_REPO, str(piper_dir)], check=True)
+        subprocess.run(["git", "checkout", PIPER_COMMIT], cwd=str(piper_dir), check=True)
 
     voice_path = piper_dir / "models" / "en_US-libritts_r-medium.pt"
     if voice_path.exists():
