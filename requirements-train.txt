@@ -22,7 +22,7 @@ deep-phonemizer==0.0.19
 
 # Data
 mutagen==1.47.0
-pronouncing==0.2.0
+pronouncing==0.3.0
 datasets==2.14.6
 
 # Model conversion
@@ -34,5 +34,4 @@ protobuf>=3.20,<4
 
 # Misc
 pyyaml>=6.0,<7
-setuptools
 numpy<2
