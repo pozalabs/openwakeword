@@ -1,0 +1,36 @@
+# Training dependencies for openwakeword custom model training.
+# Versions follow the notebook (notebooks/automatic_model_training.ipynb).
+#
+# Usage:
+#   pip install -e .
+#   pip install -r requirements-train.txt
+
+# TTS & audio
+piper-phonemize
+webrtcvad
+torch>=1.13.1,<3
+torchaudio>=0.13.1,<1
+
+# Training
+torchinfo==1.8.0
+torchmetrics==1.2.0
+speechbrain==0.5.14
+audiomentations==0.33.0
+torch-audiomentations==0.11.0
+acoustics==0.2.6
+deep-phonemizer==0.0.19
+
+# Data
+mutagen==1.47.0
+pronouncing==0.2.0
+datasets==2.14.6
+
+# Model conversion
+tensorflow-cpu==2.8.1
+tensorflow_probability==0.16.0
+onnx==1.14.0
+onnx_tf==1.10.0
+protobuf>=3.20,<4
+
+# Misc
+pyyaml>=6.0,<7
