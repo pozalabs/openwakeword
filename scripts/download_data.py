@@ -34,7 +34,15 @@ PIPER_VOICE_URL = "https://github.com/rhasspy/piper-sample-generator/releases/do
 FEATURES_URL = "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
 VALIDATION_URL = "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/validation_set_features.npy"
 
-ALL_STEPS = ["piper", "rir", "audioset", "fma", "features"]
+FEATURE_MODEL_BASE_URL = "https://github.com/dscripka/openWakeWord/releases/download/v0.5.1"
+FEATURE_MODEL_FILES = [
+    "embedding_model.onnx",
+    "embedding_model.tflite",
+    "melspectrogram.onnx",
+    "melspectrogram.tflite",
+]
+
+ALL_STEPS = ["piper", "models", "rir", "audioset", "fma", "features"]
 
 
 def save_audio_dataset_as_wav(dataset, output_dir: Path, replace_ext: str | None = None):
@@ -62,6 +70,21 @@ def download_piper(output_dir: Path):
         logger.info("Downloading piper voice model...")
         voice_path.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(["wget", "-O", str(voice_path), PIPER_VOICE_URL], check=True)
+
+
+def download_feature_models():
+    import openwakeword
+    models_dir = Path(openwakeword.__file__).parent / "resources" / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+
+    for filename in FEATURE_MODEL_FILES:
+        path = models_dir / filename
+        if path.exists():
+            logger.info(f"{filename} already exists, skipping")
+        else:
+            url = f"{FEATURE_MODEL_BASE_URL}/{filename}"
+            logger.info(f"Downloading {filename}...")
+            subprocess.run(["wget", "-O", str(path), url], check=True)
 
 
 def download_mit_rirs(output_dir: Path):
@@ -110,7 +133,7 @@ def download_fma(output_dir: Path, n_hours: int):
         logger.info("FMA directory is not empty, skipping")
         return
 
-    logger.info(f"Downloading FMA dataset (this downloads the full 'small' subset first)...")
+    logger.info("Downloading FMA dataset (this downloads the full 'small' subset first)...")
     ds = datasets.load_dataset(
         "rudraml/fma", name="small", split="train", trust_remote_code=True,
     )
@@ -154,6 +177,7 @@ def main():
 
     steps = {
         "piper": lambda: download_piper(args.output_dir),
+        "models": lambda: download_feature_models(),
         "rir": lambda: download_mit_rirs(args.output_dir),
         "audioset": lambda: download_audioset(args.output_dir, args.audioset_hours),
         "fma": lambda: download_fma(args.output_dir, args.fma_hours),
