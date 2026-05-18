@@ -17,7 +17,6 @@ Usage:
 import argparse
 import logging
 import subprocess
-import tarfile
 from pathlib import Path
 
 import datasets
@@ -28,8 +27,7 @@ from tqdm import tqdm
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-AUDIOSET_TAR = "bal_train09.tar"
-AUDIOSET_URL = f"https://huggingface.co/datasets/agkphysics/AudioSet/resolve/main/data/{AUDIOSET_TAR}"
+AUDIOSET_REPO = "agkphysics/AudioSet"
 PIPER_REPO = "https://github.com/rhasspy/piper-sample-generator"
 PIPER_VOICE_URL = "https://github.com/rhasspy/piper-sample-generator/releases/download/v2.0.0/en_US-libritts_r-medium.pt"
 FEATURES_URL = "https://huggingface.co/datasets/davidscripka/openwakeword_features/resolve/main/openwakeword_features_ACAV100M_2000_hrs_16bit.npy"
@@ -81,7 +79,7 @@ def download_mit_rirs(output_dir: Path):
     save_audio_dataset_as_wav(ds, rir_dir)
 
 
-def download_audioset(output_dir: Path):
+def download_audioset(output_dir: Path, n_hours: int):
     audioset_dir = output_dir / "audioset_16k"
     audioset_dir.mkdir(parents=True, exist_ok=True)
 
@@ -89,24 +87,17 @@ def download_audioset(output_dir: Path):
         logger.info("AudioSet directory is not empty, skipping")
         return
 
-    tmp_dir = output_dir / "audioset_raw"
-    tmp_dir.mkdir(parents=True, exist_ok=True)
-    tar_path = tmp_dir / AUDIOSET_TAR
-
-    logger.info("Downloading AudioSet tar...")
-    subprocess.run(["wget", "-O", str(tar_path), AUDIOSET_URL], check=True)
-
-    logger.info("Extracting AudioSet tar...")
-    with tarfile.open(str(tar_path)) as tf:
-        tf.extractall(path=str(tmp_dir))
-
-    audio_dir = tmp_dir / "audio"
-    flac_files = [str(p) for p in audio_dir.glob("**/*.flac")]
-    logger.info(f"Converting {len(flac_files)} AudioSet clips to 16kHz wav...")
-
-    ds = datasets.Dataset.from_dict({"audio": flac_files})
+    logger.info(f"Downloading AudioSet clips ({n_hours} hours)...")
+    ds = datasets.load_dataset(AUDIOSET_REPO, split="train", streaming=True)
     ds = ds.cast_column("audio", datasets.Audio(sampling_rate=16000))
-    save_audio_dataset_as_wav(ds, audioset_dir, replace_ext=".wav")
+
+    n_clips = n_hours * 3600 // 10
+    for i, row in enumerate(tqdm(ds, total=n_clips)):
+        name = f"audioset_{i:06d}.wav"
+        audio = (row["audio"]["array"] * 32767).astype(np.int16)
+        scipy.io.wavfile.write(str(audioset_dir / name), 16000, audio)
+        if i + 1 >= n_clips:
+            break
 
 
 def download_fma(output_dir: Path, n_hours: int):
@@ -148,6 +139,7 @@ def download_precomputed_features(output_dir: Path):
 def main():
     parser = argparse.ArgumentParser(description="Download training data for openwakeword")
     parser.add_argument("--output-dir", type=Path, default=Path("./training_data"))
+    parser.add_argument("--audioset-hours", type=int, default=1, help="Hours of AudioSet clips to download (default: 1)")
     parser.add_argument("--fma-hours", type=int, default=1, help="Hours of FMA clips to download (default: 1)")
     parser.add_argument("--skip", nargs="+", choices=ALL_STEPS, default=[], help="Steps to skip")
     args = parser.parse_args()
@@ -158,7 +150,7 @@ def main():
     steps = {
         "piper": lambda: download_piper(args.output_dir),
         "rir": lambda: download_mit_rirs(args.output_dir),
-        "audioset": lambda: download_audioset(args.output_dir),
+        "audioset": lambda: download_audioset(args.output_dir, args.audioset_hours),
         "fma": lambda: download_fma(args.output_dir, args.fma_hours),
         "features": lambda: download_precomputed_features(args.output_dir),
     }
