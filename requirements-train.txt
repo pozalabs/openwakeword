@@ -23,7 +23,7 @@ deep-phonemizer==0.0.19
 
 # Data
 mutagen==1.47.0
-pronouncing==0.2.0
+pronouncing==0.3.0
 datasets>=2.18,<3
 
 # Model conversion
@@ -36,6 +36,6 @@ onnxruntime==1.22.1
 ai_edge_litert==1.4.0
 
 # Misc
-setuptools
+setuptools<82
 numpy<2
 pyyaml>=6.0,<7
