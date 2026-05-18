@@ -24,6 +24,7 @@ deep-phonemizer==0.0.19
 mutagen==1.47.0
 pronouncing==0.3.0
 datasets>=2.18
+soundfile
 
 # Model conversion
 tensorflow-cpu==2.8.1
